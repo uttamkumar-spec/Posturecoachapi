@@ -1,0 +1,30 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/athletiq-api:$SHORT_SHA', '.']
+
+  # Push it to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/athletiq-api:$SHORT_SHA']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'athletiq-api'
+      - '--image=gcr.io/$PROJECT_ID/athletiq-api:$SHORT_SHA'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--port=8000'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=120'
+      - '--set-secrets=GROQ_API_KEY=groq-api-key:latest,ATHLETIQ_API_KEY=athletiq-api-key:latest'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/$PROJECT_ID/athletiq-api:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
