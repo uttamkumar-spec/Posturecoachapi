@@ -14,7 +14,7 @@ steps:
       - 'deploy'
       - 'athletiq-api'
       - '--image=gcr.io/$PROJECT_ID/athletiq-api:$SHORT_SHA'
-      - '--region=us-central1'
+      - '--region=asia-south1'
       - '--platform=managed'
       - '--port=8080'
       - '--memory=1Gi'
