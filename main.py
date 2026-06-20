@@ -178,8 +178,8 @@ def call_groq(messages: list, model: str = "llama-3.3-70b-versatile", max_tokens
         try:
             error_detail = json.loads(body).get("error", {}).get("message", "")
         except json.JSONDecodeError:
-            error_detail = ""
-        logger.error("Groq API error %s: %s", e.code, error_detail)
+            error_detail = body.decode("utf-8", errors="replace")
+        logger.error("Groq API error %s: %s | headers: %s", e.code, error_detail, dict(e.headers))
         # Don't leak upstream error internals to the client
         raise HTTPException(status_code=502, detail="Upstream model error — please try again")
     except urllib.error.URLError as e:
