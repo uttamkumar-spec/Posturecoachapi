@@ -6,11 +6,12 @@
 <title>AthletiQ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; max-width: 100%; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
   header { padding: 1.25rem 2rem; border-bottom: 0.5px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; }
   header h1 { font-size: 1.2rem; font-weight: 600; color: #10b981; }
   header span { font-size: 0.75rem; color: #64748b; background: rgba(255,255,255,0.04); padding: 3px 10px; border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.1); }
-  .main { display: grid; grid-template-columns: 320px 1fr; flex: 1; height: calc(100vh - 60px); }
+  .main { display: grid; grid-template-columns: 320px 1fr; flex: 1; height: calc(100vh - 60px); min-width: 0; }
   .sidebar { border-right: 0.5px solid rgba(255,255,255,0.08); padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
   .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; margin-bottom: 6px; }
   .mode-toggle { display: flex; gap: 6px; margin-bottom: 8px; }
@@ -29,8 +30,8 @@
   .examples { display: flex; flex-direction: column; gap: 6px; }
   .ex { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: #94a3b8; font-size: 12px; cursor: pointer; text-align: left; }
   .ex:hover { background: rgba(16,185,129,0.06); color: #e2e8f0; }
-  .chat-area { display: flex; flex-direction: column; height: 100%; }
-  .messages { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px; }
+  .chat-area { display: flex; flex-direction: column; height: 100%; min-width: 0; }
+  .messages { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px; }
   .empty { text-align: center; padding: 3rem 1rem; color: #475569; font-size: 13px; }
   .msg { display: flex; gap: 8px; }
   .msg.user { flex-direction: row-reverse; align-self: flex-end; max-width: 80%; }
@@ -38,7 +39,7 @@
   .av { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
   .msg.user .av { background: #1d4ed8; color: #bfdbfe; }
   .msg.bot .av { background: rgba(16,185,129,0.15); color: #10b981; }
-  .bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.65; }
+  .bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.65; word-break: break-word; overflow-wrap: break-word; }
   .msg.user .bubble { background: #1d4ed8; color: #fff; border-bottom-right-radius: 3px; }
   .msg.bot .bubble { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.08); color: #e2e8f0; border-bottom-left-radius: 3px; }
   .bubble.thinking { color: #64748b; font-style: italic; }
@@ -78,6 +79,8 @@
       grid-template-columns: 1fr;
       grid-template-rows: auto 1fr;
       height: calc(100vh - 52px);
+      max-width: 100vw;
+      overflow-x: hidden;
     }
 
     .sidebar {
@@ -86,6 +89,8 @@
       padding: 0.85rem;
       max-height: 42vh;
       gap: 0.85rem;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     /* Collapse Quick Questions into a horizontal scroll strip on mobile
@@ -334,6 +339,25 @@
     });
     return html;
   }
+
+  // ── TEMP DIAGNOSTIC: flag elements wider than the viewport ──
+  window.addEventListener('load', () => {
+    const vw = document.documentElement.clientWidth;
+    const offenders = [];
+    document.querySelectorAll('*').forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.right > vw + 1 || r.width > vw + 1) {
+        offenders.push(`${el.tagName}.${el.className || '(no class)'} — w:${Math.round(r.width)} right:${Math.round(r.right)} vw:${vw}`);
+        el.style.outline = '2px solid red';
+      }
+    });
+    if (offenders.length) {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#7f1d1d;color:#fff;font-size:11px;padding:8px;z-index:9999;max-height:40vh;overflow:auto;white-space:pre-wrap';
+      banner.textContent = 'Overflow offenders (outlined red):\n' + offenders.join('\n');
+      document.body.appendChild(banner);
+    }
+  });
 
   async function send() {
     const q = document.getElementById('qInput').value.trim();
