@@ -140,6 +140,16 @@
   document.getElementById('fileInput').addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
     mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+
+    // Cloud Run caps request size at 32MB; base64 inflates size by ~33%,
+    // so keep raw video files under ~20MB to stay safely under that limit.
+    const MAX_VIDEO_MB = 20;
+    if (mediaType === 'video' && file.size > MAX_VIDEO_MB * 1024 * 1024) {
+      addMsg('bot', `This video is ${(file.size / 1024 / 1024).toFixed(1)}MB — please use a video under ${MAX_VIDEO_MB}MB (try a shorter clip or lower resolution).`, 'err');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = ev => {
       mediaB64 = ev.target.result.split(',')[1];
@@ -321,7 +331,19 @@
       });
 
       setProgress('Done', 100);
-      const data = await res.json();
+
+      let data;
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        // Non-JSON response (e.g. platform-level error page) — surface a clear message
+        if (res.status === 413) {
+          throw new Error('File too large for upload. Please use a smaller image or shorter video.');
+        }
+        throw new Error(`Server error (status ${res.status})`);
+      }
+
       document.getElementById('progressBox').style.display = 'none';
 
       if (!res.ok) throw new Error(data.detail || 'Server error');
