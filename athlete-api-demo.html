@@ -87,23 +87,20 @@
       border-right: none;
       border-bottom: 0.5px solid rgba(255,255,255,0.08);
       padding: 0.85rem;
-      max-height: 42vh;
+      max-height: 55vh;
       gap: 0.85rem;
       max-width: 100%;
       overflow-x: hidden;
+      overflow-y: auto;
     }
 
-    /* Collapse Quick Questions into a horizontal scroll strip on mobile
-       so it doesn't eat vertical space needed for chat */
+    /* Quick Questions stacked vertically on mobile */
     .examples {
-      flex-direction: row;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      gap: 8px;
+      flex-direction: column;
+      gap: 6px;
     }
     .ex {
-      flex-shrink: 0;
-      white-space: nowrap;
+      white-space: normal;
     }
 
     #previewImg, #previewVideo { max-height: 100px; }
