@@ -13,6 +13,7 @@ from typing import Optional
 import cv2
 from fastapi import Depends, FastAPI, HTTPException, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -347,6 +348,16 @@ def build_system_prompt(sport: Optional[str] = None) -> str:
 @app.get("/")
 def root():
     return {"name": "AthletiQ API", "version": "1.0.0", "status": "running"}
+
+
+@app.get("/demo", response_class=HTMLResponse)
+def demo():
+    """Serve the interactive demo UI."""
+    try:
+        with open("athlete-api-demo.html", "r") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Demo file not found")
 
 
 @app.get("/health")

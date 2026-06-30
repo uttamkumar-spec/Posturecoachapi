@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AthletiQ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
+  header { padding: 1.25rem 2rem; border-bottom: 0.5px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 1.2rem; font-weight: 600; color: #10b981; }
+  header span { font-size: 0.75rem; color: #64748b; background: rgba(255,255,255,0.04); padding: 3px 10px; border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.1); }
+  .main { display: grid; grid-template-columns: 320px 1fr; flex: 1; height: calc(100vh - 60px); }
+  .sidebar { border-right: 0.5px solid rgba(255,255,255,0.08); padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
+  .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; margin-bottom: 6px; }
+  .upload-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tab { flex: 1; padding: 7px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #64748b; font-size: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .tab.active { border-color: #10b981; color: #10b981; background: rgba(16,185,129,0.06); }
+  .mode-toggle { display: flex; gap: 6px; margin-bottom: 8px; }
+  .mode-btn { flex: 1; padding: 7px 4px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #64748b; font-size: 11px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .mode-btn.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.06); }
+  .upload-area { border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 1.25rem; text-align: center; cursor: pointer; position: relative; transition: all 0.2s; }
+  .upload-area:hover { border-color: #10b981; }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-area p { font-size: 12px; color: #64748b; margin-top: 4px; }
+  #previewImg { width: 100%; border-radius: 8px; max-height: 150px; object-fit: cover; display: none; margin-bottom: 8px; }
+  #previewVideo { width: 100%; border-radius: 8px; max-height: 150px; display: none; margin-bottom: 8px; }
+  .clear-media { width: 100%; font-size: 12px; color: #f87171; background: none; border: 0.5px solid rgba(248,113,113,0.3); border-radius: 8px; padding: 6px; cursor: pointer; display: none; margin-bottom: 8px; }
+  .progress { display: none; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #94a3b8; }
+  .progress-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 8px; }
+  .progress-fill { height: 100%; background: #10b981; border-radius: 2px; width: 0%; transition: width 0.3s; }
+  .examples { display: flex; flex-direction: column; gap: 6px; }
+  .ex { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: #94a3b8; font-size: 12px; cursor: pointer; text-align: left; }
+  .ex:hover { background: rgba(16,185,129,0.06); color: #e2e8f0; }
+  .chat-area { display: flex; flex-direction: column; height: 100%; }
+  .messages { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px; }
+  .empty { text-align: center; padding: 3rem 1rem; color: #475569; font-size: 13px; }
+  .msg { display: flex; gap: 8px; }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; max-width: 80%; }
+  .msg.bot { align-self: flex-start; max-width: 85%; }
+  .av { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .msg.user .av { background: #1d4ed8; color: #bfdbfe; }
+  .msg.bot .av { background: rgba(16,185,129,0.15); color: #10b981; }
+  .bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.65; }
+  .msg.user .bubble { background: #1d4ed8; color: #fff; border-bottom-right-radius: 3px; }
+  .msg.bot .bubble { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.08); color: #e2e8f0; border-bottom-left-radius: 3px; }
+  .bubble.thinking { color: #64748b; font-style: italic; }
+  .bubble.err { color: #f87171; }
+  .annotated-result { margin-top: 10px; }
+  .annotated-result img { width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; }
+  .flaw-card { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; border-left: 3px solid #f59e0b; }
+  .flaw-card.high { border-left-color: #f87171; }
+  .flaw-card.medium { border-left-color: #f59e0b; }
+  .flaw-card.low { border-left-color: #10b981; }
+  .flaw-label { font-weight: 600; font-size: 12px; color: #e2e8f0; }
+  .flaw-sev { font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; text-transform: uppercase; }
+  .flaw-sev.high { background: rgba(248,113,113,0.15); color: #f87171; }
+  .flaw-sev.medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .flaw-sev.low { background: rgba(16,185,129,0.15); color: #10b981; }
+  .flaw-text { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  .exercises { margin-top: 8px; padding: 8px 12px; background: rgba(16,185,129,0.06); border-radius: 8px; font-size: 12px; color: #10b981; }
+  .frame-strip { display: flex; gap: 8px; overflow-x: auto; margin: 8px 0; padding-bottom: 4px; }
+  .frame-thumb { flex-shrink: 0; cursor: pointer; }
+  .frame-thumb img { width: 120px; height: 80px; object-fit: cover; border-radius: 6px; border: 2px solid transparent; transition: border-color 0.15s; }
+  .frame-thumb.active img { border-color: #f59e0b; }
+  .frame-thumb span { display: block; font-size: 10px; color: #64748b; text-align: center; margin-top: 2px; }
+  .input-row { padding: 1rem 1.5rem; border-top: 0.5px solid rgba(255,255,255,0.08); display: flex; gap: 8px; align-items: flex-end; }
+  textarea { flex: 1; background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; color: #e2e8f0; font-size: 13px; font-family: inherit; outline: none; resize: none; min-height: 42px; }
+  textarea:focus { border-color: #10b981; }
+  .send { background: #10b981; border: none; border-radius: 10px; padding: 10px 20px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .send:hover { background: #059669; }
+  .send:disabled { background: #1e293b; color: #4b5563; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ AthletiQ</h1>
+  <span>Image & Video Analysis</span>
+</header>
+<div class="main">
+  <div class="sidebar">
+    <div>
+      <div class="label">Upload Media</div>
+      <div class="upload-tabs">
+        <button class="tab active" id="tabImg" onclick="switchTab('image')">📸 Image</button>
+        <button class="tab" id="tabVid" onclick="switchTab('video')">🎥 Video</button>
+      </div>
+
+      <div class="label" style="margin-top:8px">Analysis Mode</div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="modeStd" onclick="switchMode('standard')">📝 Text</button>
+        <button class="mode-btn" id="modeAnn" onclick="switchMode('annotated')">🎯 Annotated</button>
+      </div>
+
+      <img id="previewImg" alt="Athlete" />
+      <video id="previewVideo" controls></video>
+      <button class="clear-media" id="clearBtn" onclick="clearMedia()">✕ Remove</button>
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept="image/*" />
+        <div style="font-size:1.8rem" id="uploadIcon">📸</div>
+        <p id="uploadText">Click or drag a photo here</p>
+        <p style="font-size:11px;margin-top:2px" id="uploadHint">JPG, PNG, WEBP</p>
+      </div>
+      <div class="progress" id="progressBox">
+        <span id="progressText">Analysing…</span>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="label">Quick Questions</div>
+      <div class="examples">
+        <button class="ex" onclick="setQ('Analyse this athlete\'s form and biomechanics')">Overall form analysis</button>
+        <button class="ex" onclick="setQ('What injury risks do you see in this movement?')">Injury risk assessment</button>
+        <button class="ex" onclick="setQ('How can this athlete improve their technique?')">Technique improvements</button>
+        <button class="ex" onclick="setQ('Describe the posture and body alignment')">Posture and alignment</button>
+        <button class="ex" onclick="setQ('Analyse the running gait and stride pattern')">Running gait analysis</button>
+        <button class="ex" onclick="setQ('What muscles are being activated here?')">Muscle activation</button>
+      </div>
+    </div>
+  </div>
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="empty" id="emptyState">
+        📸 Upload an image or 🎥 video, choose Text or Annotated mode, then ask a question
+      </div>
+    </div>
+    <div class="input-row">
+      <textarea id="qInput" placeholder="Ask about form, posture, injury risk, technique…" rows="2"></textarea>
+      <button class="send" id="sendBtn" onclick="send()">Analyse ⚡</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_KEY = 'kQDSiTcMiCXFI7bIaL6sck9b';
+  const API_BASE = '';  // empty = same origin (served from Cloud Run)
+
+  let mediaB64 = null;
+  let mediaType = null;
+  let currentTab = 'image';
+  let currentMode = 'standard'; // 'standard' | 'annotated'
+
+  function switchTab(tab) {
+    currentTab = tab;
+    clearMedia();
+    document.getElementById('tabImg').className = 'tab' + (tab==='image'?' active':'');
+    document.getElementById('tabVid').className = 'tab' + (tab==='video'?' active':'');
+    const input = document.getElementById('fileInput');
+    if (tab === 'image') {
+      input.accept = 'image/*';
+      document.getElementById('uploadIcon').textContent = '📸';
+      document.getElementById('uploadText').textContent = 'Click or drag a photo here';
+      document.getElementById('uploadHint').textContent = 'JPG, PNG, WEBP';
+    } else {
+      input.accept = 'video/*';
+      document.getElementById('uploadIcon').textContent = '🎥';
+      document.getElementById('uploadText').textContent = 'Click or drag a video here';
+      document.getElementById('uploadHint').textContent = 'MP4, MOV, AVI — max 30 seconds';
+    }
+  }
+
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('modeStd').className = 'mode-btn' + (mode==='standard'?' active':'');
+    document.getElementById('modeAnn').className = 'mode-btn' + (mode==='annotated'?' active':'');
+  }
+
+  document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      mediaB64 = ev.target.result.split(',')[1];
+      mediaType = currentTab;
+      if (currentTab === 'image') {
+        document.getElementById('previewImg').src = ev.target.result;
+        document.getElementById('previewImg').style.display = 'block';
+      } else {
+        document.getElementById('previewVideo').src = ev.target.result;
+        document.getElementById('previewVideo').style.display = 'block';
+      }
+      document.getElementById('clearBtn').style.display = 'block';
+      document.getElementById('uploadArea').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function clearMedia() {
+    mediaB64 = null; mediaType = null;
+    document.getElementById('previewImg').style.display = 'none';
+    document.getElementById('previewVideo').style.display = 'none';
+    document.getElementById('clearBtn').style.display = 'none';
+    document.getElementById('uploadArea').style.display = 'block';
+    document.getElementById('fileInput').value = '';
+    document.getElementById('progressBox').style.display = 'none';
+  }
+
+  function setQ(t) { document.getElementById('qInput').value = t; }
+
+  document.getElementById('qInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  function addMsg(role, html, cls) {
+    document.getElementById('emptyState').style.display = 'none';
+    const msgs = document.getElementById('messages');
+    const d = document.createElement('div');
+    d.className = 'msg ' + role;
+    d.innerHTML = `<div class="av">${role==='user'?'You':'AI'}</div><div class="bubble ${cls||''}">${html}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  }
+
+  function setProgress(text, pct) {
+    const box = document.getElementById('progressBox');
+    box.style.display = 'block';
+    document.getElementById('progressText').textContent = text;
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  function formatText(t) {
+    return t.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  }
+
+  function renderAnnotatedImage(result) {
+    const flaws = result.flaws || [];
+    const exercises = result.recommended_exercises || [];
+    let html = `<div class="annotated-result">`;
+    html += `<img src="data:image/jpeg;base64,${result.annotated_image_base64}" alt="Annotated athlete" />`;
+    html += `<p style="font-size:13px;margin-bottom:8px">${formatText(result.summary)}</p>`;
+    if (flaws.length) {
+      html += `<div class="label" style="margin-bottom:6px">Issues Found (${flaws.length})</div>`;
+      flaws.forEach((f, i) => {
+        html += `<div class="flaw-card ${f.severity}">
+          <span class="flaw-label">${i+1}. ${f.label}</span>
+          <span class="flaw-sev ${f.severity}">${f.severity}</span>
+          <p class="flaw-text">${f.explanation}</p>
+        </div>`;
+      });
+    } else {
+      html += `<p style="font-size:12px;color:#10b981">✓ No significant form issues detected</p>`;
+    }
+    if (exercises.length) {
+      html += `<div class="exercises"><strong>Recommended exercises:</strong><br>${exercises.map(e=>'• '+e).join('<br>')}</div>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  function renderAnnotatedVideo(result) {
+    const frames = result.frames || [];
+    let html = `<div class="annotated-result">`;
+    html += `<p style="font-size:13px;margin-bottom:8px">${formatText(result.summary)}</p>`;
+
+    if (frames.length === 0) {
+      html += `<p style="font-size:12px;color:#10b981">✓ No significant form issues detected in this video</p>`;
+    } else {
+      html += `<div class="label" style="margin-bottom:6px">Key Frames with Issues (${frames.length})</div>`;
+      // Filmstrip
+      html += `<div class="frame-strip" id="frameStrip">`;
+      frames.forEach((f, i) => {
+        html += `<div class="frame-thumb ${i===0?'active':''}" onclick="selectFrame(${i})" id="thumb-${i}">
+          <img src="data:image/jpeg;base64,${f.annotated_image_base64}" alt="Frame ${f.frame_number}" />
+          <span>${f.timestamp_seconds}s</span>
+        </div>`;
+      });
+      html += `</div>`;
+
+      // Selected frame detail
+      html += `<div id="frameDetail">`;
+      html += renderFrameDetail(frames[0]);
+      html += `</div>`;
+    }
+
+    if (result.recommended_exercises && result.recommended_exercises.length) {
+      html += `<div class="exercises"><strong>Recommended exercises:</strong><br>${result.recommended_exercises.map(e=>'• '+e).join('<br>')}</div>`;
+    }
+    html += `</div>`;
+    return html;
+
+    // Store frames globally for selection
+    window._videoFrames = frames;
+  }
+
+  window._videoFrames = [];
+  function selectFrame(i) {
+    document.querySelectorAll('.frame-thumb').forEach((el, idx) => {
+      el.className = 'frame-thumb' + (idx===i?' active':'');
+    });
+    document.getElementById('frameDetail').innerHTML = renderFrameDetail(window._videoFrames[i]);
+  }
+
+  function renderFrameDetail(frame) {
+    if (!frame) return '';
+    let html = `<img src="data:image/jpeg;base64,${frame.annotated_image_base64}" alt="Frame ${frame.frame_number}" style="width:100%;border-radius:8px;margin-bottom:8px" />`;
+    (frame.flaws || []).forEach((f, i) => {
+      html += `<div class="flaw-card ${f.severity}">
+        <span class="flaw-label">${i+1}. ${f.label}</span>
+        <span class="flaw-sev ${f.severity}">${f.severity}</span>
+        <p class="flaw-text">${f.explanation}</p>
+      </div>`;
+    });
+    return html;
+  }
+
+  async function send() {
+    const q = document.getElementById('qInput').value.trim();
+    if (!q) return;
+
+    document.getElementById('sendBtn').disabled = true;
+    document.getElementById('qInput').value = '';
+    addMsg('user', q);
+
+    const isAnnotated = currentMode === 'annotated';
+    const isVideo = mediaType === 'video';
+
+    const thinkingText = isVideo
+      ? 'Extracting key frames and analysing… (may take 20-40 seconds)'
+      : isAnnotated ? 'Analysing and marking issues…' : 'Analysing…';
+    const thinking = addMsg('bot', thinkingText, 'thinking');
+    setProgress('Sending to server…', 20);
+
+    // Pick the right endpoint
+    let endpoint;
+    if (!mediaB64) {
+      endpoint = '/api/chat';
+    } else if (isVideo) {
+      endpoint = isAnnotated ? '/api/analyse-video-annotated' : '/api/analyse-video';
+    } else {
+      endpoint = isAnnotated ? '/api/analyse-image-annotated' : '/api/analyse-image';
+    }
+
+    // Build request body
+    const body = { question: q };
+    if (mediaType === 'image') body.image_base64 = mediaB64;
+    if (mediaType === 'video') body.video_base64 = mediaB64;
+    if (!mediaB64) body.message = q;
+
+    try {
+      setProgress(isVideo ? 'Processing frames…' : 'Analysing…', 50);
+
+      const res = await fetch(API_BASE + endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': API_KEY,
+        },
+        body: JSON.stringify(body),
+      });
+
+      setProgress('Done', 100);
+      const data = await res.json();
+      document.getElementById('progressBox').style.display = 'none';
+
+      if (!res.ok) throw new Error(data.detail || 'Server error');
+
+      thinking.querySelector('.bubble').className = 'bubble';
+
+      if (isAnnotated && mediaB64) {
+        // Annotated response — render visual result
+        if (isVideo) {
+          window._videoFrames = data.frames || [];
+          thinking.querySelector('.bubble').innerHTML = renderAnnotatedVideo(data);
+        } else {
+          thinking.querySelector('.bubble').innerHTML = renderAnnotatedImage(data);
+        }
+      } else {
+        // Standard text response
+        const text = data.analysis || data.answer || '';
+        thinking.querySelector('.bubble').innerHTML = formatText(text);
+      }
+
+    } catch(err) {
+      document.getElementById('progressBox').style.display = 'none';
+      thinking.querySelector('.bubble').className = 'bubble err';
+      thinking.querySelector('.bubble').textContent = 'Error: ' + err.message;
+    }
+
+    document.getElementById('sendBtn').disabled = false;
+  }
+</script>
+</body>
+</html>
