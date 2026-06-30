@@ -67,6 +67,56 @@
   .send { background: #10b981; border: none; border-radius: 10px; padding: 10px 20px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; }
   .send:hover { background: #059669; }
   .send:disabled { background: #1e293b; color: #4b5563; cursor: not-allowed; }
+
+  /* ── Mobile responsiveness ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    header { padding: 0.85rem 1rem; }
+    header h1 { font-size: 1.05rem; }
+    header span { font-size: 0.65rem; padding: 2px 8px; }
+
+    .main {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      height: calc(100vh - 52px);
+    }
+
+    .sidebar {
+      border-right: none;
+      border-bottom: 0.5px solid rgba(255,255,255,0.08);
+      padding: 0.85rem;
+      max-height: 42vh;
+      gap: 0.85rem;
+    }
+
+    /* Collapse Quick Questions into a horizontal scroll strip on mobile
+       so it doesn't eat vertical space needed for chat */
+    .examples {
+      flex-direction: row;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      gap: 8px;
+    }
+    .ex {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    #previewImg, #previewVideo { max-height: 100px; }
+
+    .messages { padding: 1rem; gap: 10px; }
+    .msg.user, .msg.bot { max-width: 90%; }
+
+    .input-row { padding: 0.75rem 1rem; }
+    textarea { font-size: 16px; } /* 16px prevents iOS auto-zoom on focus */
+    .send { padding: 10px 16px; font-size: 12px; }
+
+    .frame-thumb img { width: 90px; height: 60px; }
+  }
+
+  @media (max-width: 420px) {
+    .mode-toggle { flex-direction: column; }
+    .send { padding: 10px 12px; }
+  }
 </style>
 </head>
 <body>
