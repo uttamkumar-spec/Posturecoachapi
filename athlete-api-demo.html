@@ -13,9 +13,6 @@
   .main { display: grid; grid-template-columns: 320px 1fr; flex: 1; height: calc(100vh - 60px); }
   .sidebar { border-right: 0.5px solid rgba(255,255,255,0.08); padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; }
   .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; margin-bottom: 6px; }
-  .upload-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
-  .tab { flex: 1; padding: 7px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #64748b; font-size: 12px; cursor: pointer; text-align: center; transition: all 0.15s; }
-  .tab.active { border-color: #10b981; color: #10b981; background: rgba(16,185,129,0.06); }
   .mode-toggle { display: flex; gap: 6px; margin-bottom: 8px; }
   .mode-btn { flex: 1; padding: 7px 4px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #64748b; font-size: 11px; cursor: pointer; text-align: center; transition: all 0.15s; }
   .mode-btn.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.06); }
@@ -81,11 +78,6 @@
   <div class="sidebar">
     <div>
       <div class="label">Upload Media</div>
-      <div class="upload-tabs">
-        <button class="tab active" id="tabImg" onclick="switchTab('image')">📸 Image</button>
-        <button class="tab" id="tabVid" onclick="switchTab('video')">🎥 Video</button>
-      </div>
-
       <div class="label" style="margin-top:8px">Analysis Mode</div>
       <div class="mode-toggle">
         <button class="mode-btn active" id="modeStd" onclick="switchMode('standard')">📝 Text</button>
@@ -96,10 +88,10 @@
       <video id="previewVideo" controls></video>
       <button class="clear-media" id="clearBtn" onclick="clearMedia()">✕ Remove</button>
       <div class="upload-area" id="uploadArea">
-        <input type="file" id="fileInput" accept="image/*" />
-        <div style="font-size:1.8rem" id="uploadIcon">📸</div>
-        <p id="uploadText">Click or drag a photo here</p>
-        <p style="font-size:11px;margin-top:2px" id="uploadHint">JPG, PNG, WEBP</p>
+        <input type="file" id="fileInput" accept="image/*,video/*" />
+        <div style="font-size:1.8rem" id="uploadIcon">📎</div>
+        <p id="uploadText">Click or drag a photo or video here</p>
+        <p style="font-size:11px;margin-top:2px" id="uploadHint">JPG, PNG, WEBP, MP4, MOV — video max 30s</p>
       </div>
       <div class="progress" id="progressBox">
         <span id="progressText">Analysing…</span>
@@ -121,7 +113,7 @@
   <div class="chat-area">
     <div class="messages" id="messages">
       <div class="empty" id="emptyState">
-        📸 Upload an image or 🎥 video, choose Text or Annotated mode, then ask a question
+        📎 Upload a photo or video, choose Text or Annotated mode, then ask a question
       </div>
     </div>
     <div class="input-row">
@@ -137,27 +129,7 @@
 
   let mediaB64 = null;
   let mediaType = null;
-  let currentTab = 'image';
   let currentMode = 'standard'; // 'standard' | 'annotated'
-
-  function switchTab(tab) {
-    currentTab = tab;
-    clearMedia();
-    document.getElementById('tabImg').className = 'tab' + (tab==='image'?' active':'');
-    document.getElementById('tabVid').className = 'tab' + (tab==='video'?' active':'');
-    const input = document.getElementById('fileInput');
-    if (tab === 'image') {
-      input.accept = 'image/*';
-      document.getElementById('uploadIcon').textContent = '📸';
-      document.getElementById('uploadText').textContent = 'Click or drag a photo here';
-      document.getElementById('uploadHint').textContent = 'JPG, PNG, WEBP';
-    } else {
-      input.accept = 'video/*';
-      document.getElementById('uploadIcon').textContent = '🎥';
-      document.getElementById('uploadText').textContent = 'Click or drag a video here';
-      document.getElementById('uploadHint').textContent = 'MP4, MOV, AVI — max 30 seconds';
-    }
-  }
 
   function switchMode(mode) {
     currentMode = mode;
@@ -167,11 +139,11 @@
 
   document.getElementById('fileInput').addEventListener('change', e => {
     const file = e.target.files[0]; if (!file) return;
+    mediaType = file.type.startsWith('video/') ? 'video' : 'image';
     const reader = new FileReader();
     reader.onload = ev => {
       mediaB64 = ev.target.result.split(',')[1];
-      mediaType = currentTab;
-      if (currentTab === 'image') {
+      if (mediaType === 'image') {
         document.getElementById('previewImg').src = ev.target.result;
         document.getElementById('previewImg').style.display = 'block';
       } else {
